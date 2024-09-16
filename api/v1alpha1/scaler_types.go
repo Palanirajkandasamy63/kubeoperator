@@ -37,7 +37,7 @@ type ScalerSpec struct {
 
 	Replicas int `json:"replicas"`
 
-	Deployment []NamespacedName `json:"deplymnets"`
+	Deployment []NamespacedName `json:"deployments"`
 }
 
 type NamespacedName struct {

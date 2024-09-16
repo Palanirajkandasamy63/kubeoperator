@@ -39,7 +39,7 @@ spec:
           spec:
             description: ScalerSpec defines the desired state of Scaler
             properties:
-              deplymnets:
+              deployments:
                 items:
                   properties:
                     name:
@@ -62,7 +62,7 @@ spec:
               start:
                 type: integer
             required:
-            - deplymnets
+            - deployments
             - end
             - replicas
             - start
