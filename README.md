@@ -123,3 +123,35 @@ limitations under the License.
  go get sigs.k8s.io/controller-runtime@v0.17.3
  go mod tidy
  operator-sdk create api --group api  --version v1alpha1 --kind Scaler
+
+ first write the in samples sclaes.yaml once you do make manifests
+ write what properties are needed for your crd 
+ 
+  start:5
+  end:10
+  replicas:5
+  deployments:
+   - name:abc
+     namespace: default
+
+     then these properties should reflect in scaler types.go 
+     we know start is int and like 
+     deployment is array of namespac and name 
+
+     Start int `json:"start"`
+
+	End int `json:"end"`
+
+	Replicas int `json:"replicas"`
+
+	Deployment []NamespacedName `json:"deplymnets"`
+}
+
+type NamespacedName struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+}
+
+now do make manifests when you check the bases api you can what is changed and you can use it 
+gt
+
