@@ -58,6 +58,7 @@ spec:
                   to remove/update
                 type: string
               replicas:
+                format: int32
                 type: integer
               start:
                 type: integer

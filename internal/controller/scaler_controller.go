@@ -18,8 +18,11 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	v1 "k8s.io/client-go/applyconfigurations/apps/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -51,7 +54,46 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	// TODO(user): your logic here
 
-	return ctrl.Result{}, nil
+	scaler:= &apiv1alpha1.Scaler{}
+	err:=r.Get(ctx,req.NamespacedName,scaler)
+    if err !=nil{
+		return ctrl.Result{},nil
+	}
+	starTime:=scaler.Spec.Start
+	endTIme:=scaler.Spec.End
+	replicas:=scaler.Spec.Replicas
+
+	currentHour:=time.Now().UTC().Hour()
+
+	if currentHour>= starTime && currentHour <= endTIme {
+
+		for _, deploy := range scaler.Spec.Deployments{
+			deployment:=&v1.Deployment()
+			err:=r.Get(ctx, types.NamespacedName{
+				Namespace:deploy.Namespace,
+				Name:deploy.Name,
+
+			},
+		     deployment,
+			)
+			if err !=nil{
+				return ctrl.Result{},err
+			}
+
+			if deployment.Spec.Replicas != &replicas{
+				deployment.Spec.Replicas=&replicas
+
+				err:=r.Update(ctx,deployment)
+				if err !=nil{
+					return ctrl.Result{},err
+				}
+			}
+
+	}
+
+
+
+	return ctrl.Result{RequeueAfter: time.Duration(30 *time.Second)}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
