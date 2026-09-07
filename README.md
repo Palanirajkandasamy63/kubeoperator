@@ -1,18 +1,45 @@
 # kubeoperator
-// TODO(user): Add simple overview of use/purpose
+
+A Kubernetes operator that scales Deployments up or down automatically based on a
+configurable time window. It watches for `Scaler` custom resources and reconciles the
+replica count of the Deployments listed in the spec whenever the current UTC hour falls
+within `start` and `end`.
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+
+`kubeoperator` introduces a `Scaler` CRD (`api.palaniraj.kandasamy/v1alpha1`) that lets you
+declare, per set of Deployments, a UTC hour window and a target replica count. The
+`ScalerReconciler` compares the current hour against that window on every reconcile loop and
+patches the matching Deployments' `spec.replicas` to keep them in sync — a lightweight
+alternative to running a CronJob for simple scheduled scaling (e.g. spinning up extra
+replicas during business hours and scaling back down overnight).
+
+**Example `Scaler` resource:**
+
+```yaml
+apiVersion: api.palaniraj.kandasamy/v1alpha1
+kind: Scaler
+metadata:
+  name: scaler-sample
+spec:
+  start: 9
+  end: 18
+  replicas: 5
+  deployments:
+    - name: my-app
+      namespace: default
+```
 
 ## Getting Started
 
 ### Prerequisites
 - go version v1.21.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+- docker version 17.03+
+- kubectl version v1.11.3+
+- Access to a Kubernetes v1.11.3+ cluster
 
 ### To Deploy on the cluster
+
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
@@ -21,7 +48,7 @@ make docker-build docker-push IMG=<some-registry>/kubeoperator:tag
 
 **NOTE:** This image ought to be published in the personal registry you specified.
 And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
+Make sure you have the proper permission to the registry if the above commands don't work.
 
 **Install the CRDs into the cluster:**
 
@@ -39,22 +66,24 @@ make deploy IMG=<some-registry>/kubeoperator:tag
 privileges or be logged in as admin.
 
 **Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
+
+You can apply the samples (examples) from `config/samples`:
 
 ```sh
 kubectl apply -k config/samples/
 ```
 
->**NOTE**: Ensure that the samples has default values to test it out.
+>**NOTE**: Ensure that the samples have values that make sense for your cluster before applying.
 
 ### To Uninstall
+
 **Delete the instances (CRs) from the cluster:**
 
 ```sh
 kubectl delete -k config/samples/
 ```
 
-**Delete the APIs(CRDs) from the cluster:**
+**Delete the APIs (CRDs) from the cluster:**
 
 ```sh
 make uninstall
@@ -76,25 +105,22 @@ Following are the steps to build the installer and distribute this project to us
 make build-installer IMG=<some-registry>/kubeoperator:tag
 ```
 
-NOTE: The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without
-its dependencies.
+   This generates an `install.yaml` file in the `dist` directory containing all the
+   resources built with Kustomize, necessary to install this project without its
+   dependencies.
 
-2. Using the installer
-
-Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
+2. Using the installer, users can run the following to install the project:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/kubeoperator/<tag or branch>/dist/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/Palanirajkandasamy63/kubeoperator/<tag or branch>/dist/install.yaml
 ```
 
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
 
-**NOTE:** Run `make help` for more information on all potential `make` targets
+Issues and pull requests are welcome. Run `make help` to see all available `make` targets,
+and check `make test` / `make lint` before submitting changes.
 
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html).
 
 ## License
 
@@ -111,47 +137,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
-
-#git commands used and opertor sdk commands used 
- mkdir kubeoperator
- git remote add origin https://github.com/Palanirajkandasamy63/kubeoperator.git\n
- git branch -M main\n
- export GO111MODULE=on
- operator-sdk init  --domain palaniraj.kandasamy --owner "raj" --repo github.com/Palanirajkandasamy63/kubeoperator
- go get sigs.k8s.io/controller-runtime@v0.17.3
- go mod tidy
- operator-sdk create api --group api  --version v1alpha1 --kind Scaler
-
- first write the in samples sclaes.yaml once you do make manifests
- write what properties are needed for your crd 
- 
-  start:5
-  end:10
-  replicas:5
-  deployments:
-   - name:abc
-     namespace: default
-
-     then these properties should reflect in scaler types.go 
-     we know start is int and like 
-     deployment is array of namespac and name 
-
-     Start int `json:"start"`
-
-	End int `json:"end"`
-
-	Replicas int `json:"replicas"`
-
-	Deployment []NamespacedName `json:"deplymnets"`
-}
-
-type NamespacedName struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-}
-
-now do make manifests when you check the bases api you can what is changed and you can use it 
-gt
-
